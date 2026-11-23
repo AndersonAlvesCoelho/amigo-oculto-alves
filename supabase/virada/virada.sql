@@ -18,7 +18,7 @@ insert into participantes (nome, email, is_admin) values
   ('Anderson',    'a0a0coelho0@gmail.com',                true),
   ('André',       'andre1226fsa@gmail.com',               false),
   ('Annelise',    'annelise.3ac@gmail.com',               false),
-  ('Augusto',     'a.c.a.a.c@hotmail.com',                false),
+  ('Augusto',     'acfarmacia@gmail.com',                 false),
   ('Cecília',     'lemes.annelise@gmail.com',             false),
   ('Claudia',     'claudiamfm10@gmail.com',               false),
   ('Enzzo',       'shaf_00@hotmail.com',                  false),
@@ -29,8 +29,8 @@ insert into participantes (nome, email, is_admin) values
   ('Larissa',     'larissazamithb@gmail.com',             false),
   ('Leonor',      'alves.c4@gmail.com',                   false),
   ('Letícia',     'narayanamartins@gmail.com',            false),
-  ('Lourenço',    'acfarmacia@gmail.com',                 false),
-  ('Luís',        'luisaugusto.r.a.c@gmail.com',          false),
+  ('Lourenço',    'a.c.a.a.c@hotmail.com',                false),
+  ('Luís',        'augustocoelho.ie@gmail.com',           false),
   ('Marcélia',    'marceliaaferreira@gmail.com',          false),
   ('Narayana',    'narayanaro@hotmail.com',               false),
   ('Renata',      'barrosorenata16@gmail.com',            false),
@@ -50,22 +50,22 @@ update participantes p
   from auth.users u
  where lower(u.email) = p.email;
 
--- 5. Exclusões (quem não pode tirar quem)
+-- 5. Exclusões (quem não pode tirar quem), pelos nomes da lista acima
 insert into exclusoes (participante_a, participante_b, motivo)
 select a.id, b.id, x.motivo
   from (values
-    ('annelise.3ac@gmail.com',  'lemes.annelise@gmail.com',    'mãe e filha'),
-    ('annelise.3ac@gmail.com',  'alemesisabela@gmail.com',     'mãe e filha'),
-    ('narayanaro@hotmail.com',  'acfarmacia@gmail.com',        'mãe e filho'),
-    ('narayanaro@hotmail.com',  'narayanamartins@gmail.com',   'mãe e filha'),
-    ('narayanaro@hotmail.com',  'luisaugusto.r.a.c@gmail.com', 'mãe e filho'),
-    ('a.c.a.a.c@hotmail.com',   'acfarmacia@gmail.com',        'pai e filho'),
-    ('a.c.a.a.c@hotmail.com',   'narayanamartins@gmail.com',   'pai e filha'),
-    ('a.c.a.a.c@hotmail.com',   'luisaugusto.r.a.c@gmail.com', 'pai e filho'),
-    ('anabeatrizsf7@gmail.com', 'barrosorenata16@gmail.com',   'Ana Beatriz não tira Renata')
-  ) as x(email_a, email_b, motivo)
-  join participantes a on a.email = x.email_a
-  join participantes b on b.email = x.email_b;
+    ('Annelise',    'Cecília',  'mãe e filha'),
+    ('Annelise',    'Isabela',  'mãe e filha'),
+    ('Narayana',    'Lourenço', 'mãe e filho'),
+    ('Narayana',    'Letícia',  'mãe e filha'),
+    ('Narayana',    'Luís',     'mãe e filho'),
+    ('Augusto',     'Lourenço', 'pai e filho'),
+    ('Augusto',     'Letícia',  'pai e filha'),
+    ('Augusto',     'Luís',     'pai e filho'),
+    ('Ana Beatriz', 'Renata',   'Ana Beatriz não tira Renata')
+  ) as x(nome_a, nome_b, motivo)
+  join participantes a on a.nome = x.nome_a
+  join participantes b on b.nome = x.nome_b;
 
 -- 6. Sorteio: Anderson abre o círculo e tira a Ana Beatriz
 select realizar_sorteio('a0a0coelho0@gmail.com', 'anabeatrizsf7@gmail.com');
