@@ -7,7 +7,6 @@ const SITE_CURTO = SITE.replace(/^https?:\/\//, "");
 
 // Paleta do app
 const ANIL = "#23306B";
-const FITA = "#E0436A";
 const PAPEL = "#F6F7FB";
 const LINHA = "#DCDFEA";
 const TEXTO = "#1E2550";
@@ -94,7 +93,7 @@ function moldura(m: Moldura) {
           </table>
 
           <div style="font-size:12px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase;color:${SUAVE};">${m.selo}</div>
-          <div style="width:32px;height:3px;background:${FITA};border-radius:2px;margin:10px 0 16px;font-size:0;line-height:0;">&nbsp;</div>
+          <div style="width:32px;height:3px;background:${ANIL};opacity:.25;border-radius:2px;margin:10px 0 16px;font-size:0;line-height:0;">&nbsp;</div>
           <h1 style="margin:0 0 18px;font-size:25px;line-height:1.3;font-weight:700;color:${ANIL};">${m.titulo}</h1>
 
           ${paragrafos}
@@ -122,20 +121,19 @@ function moldura(m: Moldura) {
 const textoPuro = (linhas: (string | false | undefined)[]) =>
   linhas.filter((l) => l !== false && l !== undefined).join("\n");
 
-const OBS_LINK = `O link vale por 24 horas e só funciona uma vez. Se ele vencer, entre em <a href="${SITE}/entrar" style="color:${ANIL};">${SITE_CURTO}</a> com este e-mail e peça outro.`;
+const OBS_LINK = `O link vale por 24 horas e funciona uma vez só. Se vencer, é só entrar em <a href="${SITE}/entrar" style="color:${ANIL};">${SITE_CURTO}</a> com este e-mail e pedir outro.`;
 
 /** Primeiro e-mail: avisa do sorteio e ativa a conta. Nunca traz o nome sorteado. */
 export function emailConvite({ nome, link }: { nome?: string; link: string }): Email {
   const oi = saudacao(nome);
   return {
-    assunto: "Seu amigo oculto já foi sorteado",
+    assunto: "Seu amigo oculto já foi sorteado 🎁",
     html: moldura({
-      selo: "O sorteio saiu",
-      titulo: "Tem alguém esperando o seu presente",
+      selo: "Amigo Oculto 2026",
+      titulo: "Seu amigo oculto já foi sorteado 🎁",
       paragrafos: [
-        escapar(oi),
-        "O sorteio do Amigo Oculto Alves foi feito. Seu amigo oculto já está escolhido, guardado numa etiqueta só sua.",
-        "Ative sua conta para descobrir quem você tirou e montar a sua lista de presentes.",
+        `${escapar(oi)} O sorteio da família Alves aconteceu e tem alguém esperando o <strong>seu</strong> presente. 🎉`,
+        "Toque no botão para descobrir quem você tirou e montar a sua lista de desejos.",
       ],
       destaque: { numero: "R$ 50–60", legenda: "valor sugerido" },
       botao: "Descobrir quem eu tirei",
@@ -143,15 +141,14 @@ export function emailConvite({ nome, link }: { nome?: string; link: string }): E
       observacao: OBS_LINK,
     }),
     texto: textoPuro([
-      oi,
+      `${oi} O sorteio da família Alves aconteceu e tem alguém esperando o seu presente. 🎉`,
       "",
-      "O sorteio do Amigo Oculto Alves foi feito e tem alguém esperando o seu presente.",
-      "Abra o link para ativar sua conta e descobrir quem você tirou:",
+      "Descubra quem você tirou:",
       link,
       "",
       "Valor sugerido: R$ 50 a R$ 60.",
-      "O link vale por 24 horas e só funciona uma vez.",
-      `Se ele vencer, entre em ${SITE}/entrar com este e-mail e peça outro.`,
+      "O link vale por 24 horas e funciona uma vez só.",
+      `Se vencer, entre em ${SITE}/entrar com este e-mail e peça outro.`,
     ]),
   };
 }
@@ -160,22 +157,23 @@ export function emailConvite({ nome, link }: { nome?: string; link: string }): E
 export function emailAcesso({ nome, link }: { nome?: string; link: string }): Email {
   const oi = saudacao(nome);
   return {
-    assunto: "Seu link de acesso – Amigo Oculto Alves",
+    assunto: "Seu link para entrar no Amigo Oculto Alves 🔑",
     html: moldura({
       selo: "Link de acesso",
-      titulo: "Bem-vindo de volta",
-      paragrafos: [escapar(oi), "Use o botão abaixo para entrar no Amigo Oculto Alves. Seu segredo continua bem guardado."],
+      titulo: "Aqui está o seu link para entrar 🔑",
+      paragrafos: [
+        `${escapar(oi)} É só tocar no botão e pronto, você já está lá dentro.`,
+        "Seu segredo continua bem guardado. 🤫",
+      ],
       botao: "Entrar",
       link,
-      observacao: "O link vale por 24 horas e só funciona uma vez. Se você não pediu este e-mail, pode ignorá-lo.",
+      observacao: "O link vale por 24 horas e funciona uma vez só. Se não foi você que pediu, pode ignorar este e-mail.",
     }),
     texto: textoPuro([
-      oi,
-      "",
-      "Abra o link abaixo para entrar no Amigo Oculto Alves:",
+      `${oi} Aqui está o seu link para entrar no Amigo Oculto Alves:`,
       link,
       "",
-      "O link vale por 24 horas e só funciona uma vez. Se você não pediu este e-mail, pode ignorá-lo.",
+      "O link vale por 24 horas e funciona uma vez só. Se não foi você que pediu, pode ignorar.",
     ]),
   };
 }
@@ -184,27 +182,25 @@ export function emailAcesso({ nome, link }: { nome?: string; link: string }): Em
 export function emailAjudante({ quemConvidou, link }: { quemConvidou?: string; link: string }): Email {
   const quem = primeiroNome(quemConvidou) ?? "Alguém da família Alves";
   return {
-    assunto: `${quem} pediu sua ajuda no Amigo Oculto Alves`,
+    assunto: `${quem} pediu sua ajuda no amigo oculto 🤝`,
     html: moldura({
       selo: "Convite de ajudante",
-      titulo: "Você foi convidado para ajudar",
+      titulo: `${escapar(quem)} pediu sua ajuda 🤝`,
       paragrafos: [
-        "Oi!",
-        `<strong>${escapar(quem)}</strong> chamou você para ajudar a escolher o presente do amigo oculto da família Alves.`,
-        `Você vai ver quem ${escapar(quem)} tirou e a lista de presentes dessa pessoa. É só para ajudar: o segredo fica entre vocês.`,
+        `Oi! ${escapar(quem)} quer uma mãozinha para escolher o presente do amigo oculto da família Alves.`,
+        `Você vai ver quem ${escapar(quem)} tirou e a lista de desejos dessa pessoa. Só não vale contar o segredo! 😉`,
       ],
-      botao: "Ver o amigo oculto",
+      botao: "Quero ajudar",
       link,
       observacao: OBS_LINK,
     }),
     texto: textoPuro([
-      "Oi!",
+      `Oi! ${quem} pediu sua ajuda para escolher o presente do amigo oculto da família Alves. 🤝`,
       "",
-      `${quem} convidou você para ajudar a escolher o presente do amigo oculto da família Alves.`,
-      "Abra o link para ver quem foi sorteado e a lista de presentes:",
+      "Veja quem foi sorteado e a lista de desejos:",
       link,
       "",
-      "O link vale por 24 horas e só funciona uma vez.",
+      "O link vale por 24 horas e funciona uma vez só.",
     ]),
   };
 }
@@ -214,22 +210,19 @@ export function emailListaAlterada({ nome }: { nome?: string }): Email {
   const oi = saudacao(nome);
   const link = `${SITE}/`;
   return {
-    assunto: "Seu amigo oculto atualizou a lista de presentes",
+    assunto: "Seu amigo oculto atualizou a lista ✨",
     html: moldura({
-      selo: "Lista atualizada",
-      titulo: "Tem dica nova na lista",
+      selo: "Lista de desejos",
+      titulo: "Seu amigo oculto atualizou a lista ✨",
       paragrafos: [
-        escapar(oi),
-        "A pessoa que você tirou acabou de mexer na lista de presentes. Pode ser a pista que faltava.",
+        `${escapar(oi)} Tem novidade na lista de quem você tirou. Pode ser justamente a dica que faltava! 👀`,
       ],
       botao: "Ver a lista",
       link,
-      observacao: "Para não lotar sua caixa, juntamos as mudanças: no máximo um aviso a cada 3 horas.",
+      observacao: "Para não encher sua caixa, juntamos as mudanças: no máximo um aviso a cada 3 horas.",
     }),
     texto: textoPuro([
-      oi,
-      "",
-      "A pessoa que você tirou atualizou a lista de presentes.",
+      `${oi} Seu amigo oculto atualizou a lista de desejos. ✨`,
       `Veja em ${link}`,
     ]),
   };
@@ -241,16 +234,22 @@ export function emailMensagemNova({ nome, papel }: { nome?: string; papel: "da" 
   const quem = papel === "da" ? "a pessoa que você tirou" : "quem tirou você";
   const link = `${SITE}/conversas`;
   return {
-    assunto: "Você tem uma mensagem do seu amigo oculto",
+    assunto: "Você recebeu uma mensagem secreta 💬",
     html: moldura({
-      selo: "Mensagem anônima",
-      titulo: "Chegou uma mensagem para você",
-      paragrafos: [escapar(oi), `Seu amigo oculto (${quem}) mandou uma mensagem anônima.`],
+      selo: "Conversa anônima",
+      titulo: "Você recebeu uma mensagem secreta 💬",
+      paragrafos: [
+        `${escapar(oi)} Uma mensagem anônima de <strong>${quem}</strong> está esperando por você.`,
+        "Responda sem se entregar! 🤫",
+      ],
       botao: "Ler a mensagem",
       link,
-      observacao: "Para não lotar sua caixa, avisamos no máximo uma vez por hora.",
+      observacao: "Para não encher sua caixa, avisamos no máximo uma vez por hora.",
     }),
-    texto: textoPuro([oi, "", `Seu amigo oculto (${quem}) mandou uma mensagem anônima.`, `Leia em ${link}`]),
+    texto: textoPuro([
+      `${oi} Você recebeu uma mensagem anônima de ${quem}. 💬`,
+      `Leia em ${link}`,
+    ]),
   };
 }
 
@@ -259,17 +258,18 @@ export function emailLembrete({ nome, dias, dataTexto }: { nome?: string; dias: 
   const oi = saudacao(nome);
   const link = `${SITE}/`;
   const perto = dias <= 2;
+  const titulo = perto ? `Faltam ${dias} dias para o amigo oculto! ⏰` : "Falta uma semana para o amigo oculto! 📅";
   return {
-    assunto: perto ? `Faltam ${dias} dias para o Amigo Oculto Alves` : "Falta uma semana para o Amigo Oculto Alves",
+    assunto: titulo,
     html: moldura({
-      selo: perto ? "Reta final" : "Contagem regressiva",
-      titulo: perto ? "Está quase na hora" : "Uma semana para o nosso encontro",
+      selo: "Lembrete",
+      titulo,
       paragrafos: [
-        escapar(oi),
+        `${escapar(oi)} Nosso encontro é em <strong>${escapar(dataTexto)}</strong>.`,
         perto
-          ? "Faltam só dois dias. Se o presente ainda não está embrulhado, este é o momento."
-          : "Falta uma semana. Que tal dar uma última olhada na lista de quem você tirou?",
-        `Nos vemos em <strong>${escapar(dataTexto)}</strong>. Leve o celular: vai ter jogo ao vivo.`,
+          ? "Presente embrulhado? Se ainda não, essa é a hora! 🎁"
+          : "Ainda dá tempo de caprichar: dê uma olhada na lista de quem você tirou. 🎁",
+        "E leve o celular: vai ter jogo ao vivo na festa! 🎲",
       ],
       destaque: { numero: String(dias), legenda: dias === 1 ? "dia para a festa" : "dias para a festa" },
       botao: "Ver o meu amigo oculto",
@@ -277,10 +277,8 @@ export function emailLembrete({ nome, dias, dataTexto }: { nome?: string; dias: 
       observacao: "Valor sugerido do presente: R$ 50 a R$ 60.",
     }),
     texto: textoPuro([
-      oi,
-      "",
-      `Faltam ${dias} dias para o Amigo Oculto Alves (${dataTexto}).`,
-      "Leve o celular: vai ter jogo ao vivo!",
+      `${oi} ${titulo}`,
+      `Nosso encontro é em ${dataTexto}. Leve o celular: vai ter jogo ao vivo! 🎲`,
       `Veja seu amigo oculto em ${link}`,
     ]),
   };
