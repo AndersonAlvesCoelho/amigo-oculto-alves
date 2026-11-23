@@ -1,0 +1,342 @@
+ordem,tipo,objeto,definicao
+4,policy,ajudantes,convidar ajudante | INSERT | authenticated | using: - | check: (participante_id = meu_participante_id())
+4,policy,ajudantes,remover ajudante | DELETE | authenticated | using: (participante_id = meu_participante_id()) | check: -
+4,policy,ajudantes,ver meus ajudantes | SELECT | authenticated | using: ((participante_id = meu_participante_id()) OR (auth_user_id = auth.uid())) | check: -
+4,policy,itens_desejo,adicionar na minha lista | INSERT | authenticated | using: - | check: (participante_id = meu_participante_id())
+4,policy,itens_desejo,apagar da minha lista | DELETE | authenticated | using: (participante_id = meu_participante_id()) | check: -
+4,policy,itens_desejo,editar minha lista | UPDATE | authenticated | using: (participante_id = meu_participante_id()) | check: (participante_id = meu_participante_id())
+4,policy,itens_desejo,ver todas as listas | SELECT | authenticated | using: true | check: -
+4,policy,mensagens,"enviar mensagem | INSERT | authenticated | using: - | check: (EXISTS ( SELECT 1
+   FROM minhas_conversas() c(sorteio_id, meu_papel)
+  WHERE ((c.sorteio_id = mensagens.sorteio_id) AND (c.meu_papel = mensagens.autor))))"
+4,policy,mensagens,"ler minhas conversas | SELECT | authenticated | using: (sorteio_id IN ( SELECT c.sorteio_id
+   FROM minhas_conversas() c(sorteio_id, meu_papel))) | check: -"
+4,policy,mensagens,"marcar como lida | UPDATE | authenticated | using: (sorteio_id IN ( SELECT c.sorteio_id
+   FROM minhas_conversas() c(sorteio_id, meu_papel))) | check: (sorteio_id IN ( SELECT c.sorteio_id
+   FROM minhas_conversas() c(sorteio_id, meu_papel)))"
+4,policy,palpites,ver meus palpites | SELECT | authenticated | using: (votante_id = meu_participante_id()) | check: -
+4,policy,participantes,autenticados veem participantes | SELECT | authenticated | using: true | check: -
+4,policy,rodadas,todos veem rodadas | SELECT | authenticated | using: true | check: -
+4,policy,sorteio,quem da ve sua linha | SELECT | authenticated | using: ((quem_da_id = meu_participante_id()) OR (quem_da_id IN ( SELECT participantes_que_ajudo() AS participantes_que_ajudo))) | check: -
+5,grant_tabela,ajudantes,"anon: REFERENCES, TRIGGER, TRUNCATE"
+5,grant_tabela,ajudantes,"authenticated: REFERENCES, TRIGGER, TRUNCATE"
+5,grant_tabela,ajudantes,"service_role: DELETE, INSERT, REFERENCES, SELECT, TRIGGER, TRUNCATE, UPDATE"
+5,grant_tabela,exclusoes,"anon: REFERENCES, TRIGGER, TRUNCATE"
+5,grant_tabela,exclusoes,"authenticated: REFERENCES, TRIGGER, TRUNCATE"
+5,grant_tabela,exclusoes,"service_role: DELETE, INSERT, REFERENCES, SELECT, TRIGGER, TRUNCATE, UPDATE"
+5,grant_tabela,itens_desejo,"anon: REFERENCES, TRIGGER, TRUNCATE"
+5,grant_tabela,itens_desejo,"authenticated: REFERENCES, TRIGGER, TRUNCATE"
+5,grant_tabela,itens_desejo,"service_role: DELETE, INSERT, REFERENCES, SELECT, TRIGGER, TRUNCATE, UPDATE"
+5,grant_tabela,log_emails,"anon: REFERENCES, TRIGGER, TRUNCATE"
+5,grant_tabela,log_emails,"authenticated: REFERENCES, TRIGGER, TRUNCATE"
+5,grant_tabela,log_emails,"service_role: DELETE, INSERT, REFERENCES, SELECT, TRIGGER, TRUNCATE, UPDATE"
+5,grant_tabela,mensagens,"anon: REFERENCES, TRIGGER, TRUNCATE"
+5,grant_tabela,mensagens,"authenticated: REFERENCES, TRIGGER, TRUNCATE"
+5,grant_tabela,mensagens,"service_role: DELETE, INSERT, REFERENCES, SELECT, TRIGGER, TRUNCATE, UPDATE"
+5,grant_tabela,palpites,"anon: REFERENCES, TRIGGER, TRUNCATE"
+5,grant_tabela,palpites,"authenticated: REFERENCES, TRIGGER, TRUNCATE"
+5,grant_tabela,palpites,"service_role: DELETE, INSERT, REFERENCES, SELECT, TRIGGER, TRUNCATE, UPDATE"
+5,grant_tabela,participantes,"anon: REFERENCES, TRIGGER, TRUNCATE"
+5,grant_tabela,participantes,"authenticated: REFERENCES, TRIGGER, TRUNCATE"
+5,grant_tabela,participantes,"service_role: DELETE, INSERT, REFERENCES, SELECT, TRIGGER, TRUNCATE, UPDATE"
+5,grant_tabela,rodadas,"anon: REFERENCES, TRIGGER, TRUNCATE"
+5,grant_tabela,rodadas,"authenticated: REFERENCES, TRIGGER, TRUNCATE"
+5,grant_tabela,rodadas,"service_role: DELETE, INSERT, REFERENCES, SELECT, TRIGGER, TRUNCATE, UPDATE"
+5,grant_tabela,sorteio,"anon: REFERENCES, TRIGGER, TRUNCATE"
+5,grant_tabela,sorteio,"authenticated: REFERENCES, TRIGGER, TRUNCATE"
+5,grant_tabela,sorteio,"service_role: DELETE, INSERT, REFERENCES, SELECT, TRIGGER, TRUNCATE, UPDATE"
+6,grant_coluna,ajudantes,"anon: REFERENCES (auth_user_id, convidado_em, email, id, participante_id)"
+6,grant_coluna,ajudantes,"authenticated: REFERENCES (auth_user_id, convidado_em, email, id, participante_id)"
+6,grant_coluna,exclusoes,"anon: REFERENCES (id, motivo, participante_a, participante_b)"
+6,grant_coluna,exclusoes,"authenticated: REFERENCES (id, motivo, participante_a, participante_b)"
+6,grant_coluna,itens_desejo,"anon: REFERENCES (atualizado_em, criado_em, descricao, id, imagem_url, link, nome, participante_id, preco)"
+6,grant_coluna,itens_desejo,"authenticated: REFERENCES (atualizado_em, criado_em, descricao, id, imagem_url, link, nome, participante_id, preco)"
+6,grant_coluna,log_emails,"anon: REFERENCES (email_destino, enviado_em, id, participante_id, status, tipo)"
+6,grant_coluna,log_emails,"authenticated: REFERENCES (email_destino, enviado_em, id, participante_id, status, tipo)"
+6,grant_coluna,mensagens,"anon: REFERENCES (autor, enviada_em, id, lida, sorteio_id, texto)"
+6,grant_coluna,mensagens,"authenticated: REFERENCES (autor, enviada_em, id, lida, sorteio_id, texto)"
+6,grant_coluna,mensagens,authenticated: UPDATE (lida)
+6,grant_coluna,palpites,"anon: REFERENCES (acertou, chute_id, criado_em, id, rodada_id, votante_id)"
+6,grant_coluna,palpites,"authenticated: REFERENCES (acertou, chute_id, criado_em, id, rodada_id, votante_id)"
+6,grant_coluna,participantes,"anon: REFERENCES (auth_user_id, criado_em, email, id, is_admin, nome)"
+6,grant_coluna,participantes,"authenticated: REFERENCES (auth_user_id, criado_em, email, id, is_admin, nome)"
+6,grant_coluna,participantes,"authenticated: SELECT (id, is_admin, nome)"
+6,grant_coluna,rodadas,"anon: REFERENCES (id, iniciada_em, ordem, sorteio_id, status)"
+6,grant_coluna,rodadas,"authenticated: REFERENCES (id, iniciada_em, ordem, sorteio_id, status)"
+6,grant_coluna,sorteio,"anon: REFERENCES (id, posicao_circulo, quem_da_id, quem_recebe_id)"
+6,grant_coluna,sorteio,"authenticated: REFERENCES (id, posicao_circulo, quem_da_id, quem_recebe_id)"
+7,trigger,ajudantes,CREATE TRIGGER trg_vincular_ajudante BEFORE INSERT ON public.ajudantes FOR EACH ROW EXECUTE FUNCTION vincular_ajudante()
+7,trigger,auth.users,CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION vincular_usuario()
+7,trigger,itens_desejo,CREATE TRIGGER trg_itens_desejo_atualizado BEFORE UPDATE ON public.itens_desejo FOR EACH ROW EXECUTE FUNCTION set_atualizado_em()
+8,funcao,estado_jogo,"CREATE OR REPLACE FUNCTION public.estado_jogo()
+ RETURNS TABLE(rodada_id uuid, ordem integer, status status_rodada, revelador_id uuid, revelador_nome text, amigo_id uuid, amigo_nome text, total_votos bigint)
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+  select r.id, r.ordem, r.status, s.quem_da_id, pd.nome,
+         case when r.status = 'revelada' then s.quem_recebe_id end,
+         case when r.status = 'revelada' then pr.nome end,
+         (select count(*) from palpites pa where pa.rodada_id = r.id)
+    from rodadas r
+    join sorteio s       on s.id  = r.sorteio_id
+    join participantes pd on pd.id = s.quem_da_id
+    join participantes pr on pr.id = s.quem_recebe_id
+   order by r.ordem
+$function$
+"
+8,funcao,jogo_encerrar_votacao,"CREATE OR REPLACE FUNCTION public.jogo_encerrar_votacao()
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+begin
+  if not sou_admin() then raise exception 'Apenas admin'; end if;
+  update rodadas set status = 'encerrada'
+   where id = (select id from rodadas order by ordem desc limit 1)
+     and status = 'votando';
+end $function$
+"
+8,funcao,jogo_proxima_rodada,"CREATE OR REPLACE FUNCTION public.jogo_proxima_rodada()
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+declare v_ultima rodadas; v_prox int;
+begin
+  if not sou_admin() then raise exception 'Apenas admin'; end if;
+  select * into v_ultima from rodadas order by ordem desc limit 1;
+  if v_ultima.id is not null and v_ultima.status <> 'revelada' then
+    raise exception 'Revele a rodada atual antes de abrir a próxima';
+  end if;
+  v_prox := coalesce(v_ultima.ordem + 1, 0);
+  if v_prox >= (select count(*) from sorteio) then
+    raise exception 'Todas as rodadas já foram jogadas';
+  end if;
+  insert into rodadas (sorteio_id, ordem)
+  select id, v_prox from sorteio where posicao_circulo = v_prox;
+end $function$
+"
+8,funcao,jogo_revelar,"CREATE OR REPLACE FUNCTION public.jogo_revelar()
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+declare v_rodada rodadas; v_amigo uuid;
+begin
+  if not sou_admin() then raise exception 'Apenas admin'; end if;
+  select * into v_rodada from rodadas order by ordem desc limit 1;
+  if v_rodada.status <> 'encerrada' then
+    raise exception 'Encerre a votação antes de revelar';
+  end if;
+  select quem_recebe_id into v_amigo from sorteio where id = v_rodada.sorteio_id;
+  update palpites set acertou = (chute_id = v_amigo) where rodada_id = v_rodada.id;
+  update rodadas set status = 'revelada' where id = v_rodada.id;
+end $function$
+"
+8,funcao,meu_participante_id,"CREATE OR REPLACE FUNCTION public.meu_participante_id()
+ RETURNS uuid
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+  select id from participantes where auth_user_id = auth.uid()
+$function$
+"
+8,funcao,minhas_conversas,"CREATE OR REPLACE FUNCTION public.minhas_conversas()
+ RETURNS TABLE(sorteio_id uuid, meu_papel autor_mensagem)
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+  select id, 'da'::autor_mensagem from sorteio
+   where quem_da_id = meu_participante_id()
+      or quem_da_id in (select participantes_que_ajudo())
+  union all
+  select id, 'recebe'::autor_mensagem from sorteio
+   where quem_recebe_id = meu_participante_id()
+$function$
+"
+8,funcao,participantes_que_ajudo,"CREATE OR REPLACE FUNCTION public.participantes_que_ajudo()
+ RETURNS SETOF uuid
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+  select participante_id from ajudantes where auth_user_id = auth.uid()
+$function$
+"
+8,funcao,ranking,"CREATE OR REPLACE FUNCTION public.ranking()
+ RETURNS TABLE(participante_id uuid, nome text, acertos bigint)
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+  select p.id, p.nome, count(pa.id) filter (where pa.acertou)
+    from participantes p
+    left join palpites pa on pa.votante_id = p.id
+   group by p.id, p.nome
+   order by 3 desc, p.nome
+$function$
+"
+8,funcao,realizar_sorteio,"CREATE OR REPLACE FUNCTION public.realizar_sorteio(p_primeiro text, p_segundo text, p_tentativas integer DEFAULT 5000)
+ RETURNS text
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+declare
+  v_primeiro uuid; v_segundo uuid; v_ordem uuid[]; v_n int; v_ok boolean; i int; t int;
+begin
+  if exists (select 1 from sorteio) then
+    raise exception 'O sorteio já foi realizado';
+  end if;
+
+  select id into v_primeiro from participantes where email = lower(p_primeiro);
+  select id into v_segundo  from participantes where email = lower(p_segundo);
+  if v_primeiro is null or v_segundo is null then
+    raise exception 'Participante não encontrado';
+  end if;
+
+  for t in 1..p_tentativas loop
+    select array[v_primeiro, v_segundo] || array_agg(id order by random())
+      into v_ordem
+      from participantes where id not in (v_primeiro, v_segundo);
+    v_n := array_length(v_ordem, 1);
+    v_ok := true;
+
+    for i in 1..v_n loop
+      if exists (select 1 from exclusoes e
+                 where (e.participante_a = v_ordem[i] and e.participante_b = v_ordem[i % v_n + 1])
+                    or (e.participante_b = v_ordem[i] and e.participante_a = v_ordem[i % v_n + 1])) then
+        v_ok := false;
+        exit;
+      end if;
+    end loop;
+
+    if v_ok then
+      insert into sorteio (quem_da_id, quem_recebe_id, posicao_circulo)
+      select v_ordem[g], v_ordem[g % v_n + 1], g - 1
+        from generate_series(1, v_n) g;
+      return format('Sorteio realizado: %s participantes em círculo.', v_n);
+    end if;
+  end loop;
+
+  raise exception 'Não foi possível montar um círculo respeitando as exclusões';
+end $function$
+"
+8,funcao,rls_auto_enable,"CREATE OR REPLACE FUNCTION public.rls_auto_enable()
+ RETURNS event_trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'pg_catalog'
+AS $function$
+DECLARE
+  cmd record;
+  tbl name;
+BEGIN
+  FOR cmd IN
+    SELECT *
+    FROM pg_event_trigger_ddl_commands()
+    WHERE command_tag IN ('CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO')
+      AND object_type IN ('table','partitioned table')
+  LOOP
+     IF cmd.schema_name IS NOT NULL AND cmd.schema_name IN ('public') AND cmd.schema_name NOT IN ('pg_catalog','information_schema') AND cmd.schema_name NOT LIKE 'pg_toast%' AND cmd.schema_name NOT LIKE 'pg_temp%' THEN
+      BEGIN
+        SELECT c.relname INTO tbl FROM pg_catalog.pg_class c WHERE c.oid = cmd.objid;
+        EXECUTE format('alter table if exists %I.%I enable row level security', cmd.schema_name, tbl);
+        RAISE LOG 'rls_auto_enable: enabled RLS on %', cmd.object_identity;
+      EXCEPTION
+        WHEN OTHERS THEN
+          RAISE LOG 'rls_auto_enable: failed to enable RLS on %', cmd.object_identity;
+      END;
+     ELSE
+        RAISE LOG 'rls_auto_enable: skip % (either system schema or not in enforced list: %.)', cmd.object_identity, cmd.schema_name;
+     END IF;
+  END LOOP;
+END;
+$function$
+"
+8,funcao,set_atualizado_em,"CREATE OR REPLACE FUNCTION public.set_atualizado_em()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+begin
+  new.atualizado_em := now();
+  return new;
+end $function$
+"
+8,funcao,sou_admin,"CREATE OR REPLACE FUNCTION public.sou_admin()
+ RETURNS boolean
+ LANGUAGE sql
+ STABLE SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+  select coalesce((select is_admin from participantes where auth_user_id = auth.uid()), false)
+$function$
+"
+8,funcao,vincular_ajudante,"CREATE OR REPLACE FUNCTION public.vincular_ajudante()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'auth'
+AS $function$
+begin
+  new.email := lower(new.email);
+  select id into new.auth_user_id from auth.users where lower(email) = new.email;
+  return new;
+end $function$
+"
+8,funcao,vincular_usuario,"CREATE OR REPLACE FUNCTION public.vincular_usuario()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+begin
+  update participantes set auth_user_id = new.id where email = lower(new.email);
+  update ajudantes     set auth_user_id = new.id where email = lower(new.email);
+  return new;
+end $function$
+"
+8,funcao,votar,"CREATE OR REPLACE FUNCTION public.votar(p_chute uuid)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+declare v_eu uuid := meu_participante_id(); v_rodada rodadas; v_revelador uuid;
+begin
+  if v_eu is null then raise exception 'Somente participantes votam'; end if;
+  select * into v_rodada from rodadas order by ordem desc limit 1;
+  if v_rodada.id is null or v_rodada.status <> 'votando' then
+    raise exception 'A votação está fechada';
+  end if;
+  select quem_da_id into v_revelador from sorteio where id = v_rodada.sorteio_id;
+  if v_eu = v_revelador then raise exception 'Você não vota na sua própria rodada'; end if;
+  if p_chute = v_revelador then raise exception 'Ninguém tira a si mesmo'; end if;
+
+  insert into palpites (rodada_id, votante_id, chute_id)
+  values (v_rodada.id, v_eu, p_chute)
+  on conflict (rodada_id, votante_id)
+  do update set chute_id = excluded.chute_id, criado_em = now();
+end $function$
+"
+9,grant_funcao,estado_jogo,"=X/postgres, postgres=X/postgres, service_role=X/postgres"
+9,grant_funcao,jogo_encerrar_votacao,"=X/postgres, postgres=X/postgres, service_role=X/postgres"
+9,grant_funcao,jogo_proxima_rodada,"=X/postgres, postgres=X/postgres, service_role=X/postgres"
+9,grant_funcao,jogo_revelar,"=X/postgres, postgres=X/postgres, service_role=X/postgres"
+9,grant_funcao,meu_participante_id,"=X/postgres, postgres=X/postgres, service_role=X/postgres"
+9,grant_funcao,minhas_conversas,"=X/postgres, postgres=X/postgres, service_role=X/postgres"
+9,grant_funcao,participantes_que_ajudo,"=X/postgres, postgres=X/postgres, service_role=X/postgres"
+9,grant_funcao,ranking,"=X/postgres, postgres=X/postgres, service_role=X/postgres"
+9,grant_funcao,realizar_sorteio,"postgres=X/postgres, service_role=X/postgres"
+9,grant_funcao,rls_auto_enable,"=X/postgres, postgres=X/postgres, service_role=X/postgres"
+9,grant_funcao,set_atualizado_em,"=X/postgres, postgres=X/postgres, service_role=X/postgres"
+9,grant_funcao,sou_admin,"=X/postgres, postgres=X/postgres, service_role=X/postgres"
+9,grant_funcao,vincular_ajudante,"=X/postgres, postgres=X/postgres, service_role=X/postgres"
+9,grant_funcao,vincular_usuario,"=X/postgres, postgres=X/postgres, service_role=X/postgres"
+9,grant_funcao,votar,"=X/postgres, postgres=X/postgres, service_role=X/postgres"

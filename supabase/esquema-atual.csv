@@ -1,0 +1,101 @@
+ordem,tipo,objeto,definicao
+1,coluna,ajudantes,auth_user_id uuid
+1,coluna,ajudantes,convidado_em timestamptz not null default now()
+1,coluna,ajudantes,email text not null
+1,coluna,ajudantes,id uuid not null default gen_random_uuid()
+1,coluna,ajudantes,participante_id uuid not null
+1,coluna,exclusoes,id uuid not null default gen_random_uuid()
+1,coluna,exclusoes,motivo text
+1,coluna,exclusoes,participante_a uuid not null
+1,coluna,exclusoes,participante_b uuid not null
+1,coluna,itens_desejo,atualizado_em timestamptz not null default now()
+1,coluna,itens_desejo,criado_em timestamptz not null default now()
+1,coluna,itens_desejo,descricao text
+1,coluna,itens_desejo,id uuid not null default gen_random_uuid()
+1,coluna,itens_desejo,imagem_url text
+1,coluna,itens_desejo,link text
+1,coluna,itens_desejo,nome text not null
+1,coluna,itens_desejo,participante_id uuid not null
+1,coluna,itens_desejo,preco numeric
+1,coluna,log_emails,email_destino text not null
+1,coluna,log_emails,enviado_em timestamptz not null default now()
+1,coluna,log_emails,id uuid not null default gen_random_uuid()
+1,coluna,log_emails,participante_id uuid
+1,coluna,log_emails,status text not null default 'enviado'::text
+1,coluna,log_emails,tipo text not null
+1,coluna,mensagens,autor autor_mensagem not null
+1,coluna,mensagens,enviada_em timestamptz not null default now()
+1,coluna,mensagens,id uuid not null default gen_random_uuid()
+1,coluna,mensagens,lida bool not null default false
+1,coluna,mensagens,sorteio_id uuid not null
+1,coluna,mensagens,texto text not null
+1,coluna,palpites,acertou bool
+1,coluna,palpites,chute_id uuid not null
+1,coluna,palpites,criado_em timestamptz not null default now()
+1,coluna,palpites,id uuid not null default gen_random_uuid()
+1,coluna,palpites,rodada_id uuid not null
+1,coluna,palpites,votante_id uuid not null
+1,coluna,participantes,auth_user_id uuid
+1,coluna,participantes,criado_em timestamptz not null default now()
+1,coluna,participantes,email text not null
+1,coluna,participantes,id uuid not null default gen_random_uuid()
+1,coluna,participantes,is_admin bool not null default false
+1,coluna,participantes,nome text not null
+1,coluna,rodadas,id uuid not null default gen_random_uuid()
+1,coluna,rodadas,iniciada_em timestamptz not null default now()
+1,coluna,rodadas,ordem int4 not null
+1,coluna,rodadas,sorteio_id uuid not null
+1,coluna,rodadas,status status_rodada not null default 'votando'::status_rodada
+1,coluna,sorteio,id uuid not null default gen_random_uuid()
+1,coluna,sorteio,posicao_circulo int4 not null
+1,coluna,sorteio,quem_da_id uuid not null
+1,coluna,sorteio,quem_recebe_id uuid not null
+2,restricao,ajudantes,ajudantes_auth_user_id_fkey: FOREIGN KEY (auth_user_id) REFERENCES auth.users(id) ON DELETE SET NULL
+2,restricao,ajudantes,ajudantes_email_check: CHECK ((email = lower(email)))
+2,restricao,ajudantes,"ajudantes_participante_id_email_key: UNIQUE (participante_id, email)"
+2,restricao,ajudantes,ajudantes_participante_id_fkey: FOREIGN KEY (participante_id) REFERENCES participantes(id) ON DELETE CASCADE
+2,restricao,ajudantes,ajudantes_pkey: PRIMARY KEY (id)
+2,restricao,exclusoes,exclusoes_check: CHECK ((participante_a <> participante_b))
+2,restricao,exclusoes,exclusoes_participante_a_fkey: FOREIGN KEY (participante_a) REFERENCES participantes(id) ON DELETE CASCADE
+2,restricao,exclusoes,"exclusoes_participante_a_participante_b_key: UNIQUE (participante_a, participante_b)"
+2,restricao,exclusoes,exclusoes_participante_b_fkey: FOREIGN KEY (participante_b) REFERENCES participantes(id) ON DELETE CASCADE
+2,restricao,exclusoes,exclusoes_pkey: PRIMARY KEY (id)
+2,restricao,itens_desejo,itens_desejo_descricao_check: CHECK ((char_length(descricao) <= 500))
+2,restricao,itens_desejo,itens_desejo_nome_check: CHECK (((char_length(nome) >= 1) AND (char_length(nome) <= 120)))
+2,restricao,itens_desejo,itens_desejo_participante_id_fkey: FOREIGN KEY (participante_id) REFERENCES participantes(id) ON DELETE CASCADE
+2,restricao,itens_desejo,itens_desejo_pkey: PRIMARY KEY (id)
+2,restricao,itens_desejo,itens_desejo_preco_check: CHECK ((preco >= (0)::numeric))
+2,restricao,log_emails,log_emails_participante_id_fkey: FOREIGN KEY (participante_id) REFERENCES participantes(id) ON DELETE SET NULL
+2,restricao,log_emails,log_emails_pkey: PRIMARY KEY (id)
+2,restricao,log_emails,"log_emails_tipo_check: CHECK ((tipo = ANY (ARRAY['convite'::text, 'resultado'::text, 'lembrete'::text, 'lista_alterada'::text, 'mensagem_nova'::text, 'ajudante'::text])))"
+2,restricao,mensagens,mensagens_pkey: PRIMARY KEY (id)
+2,restricao,mensagens,mensagens_sorteio_id_fkey: FOREIGN KEY (sorteio_id) REFERENCES sorteio(id) ON DELETE CASCADE
+2,restricao,mensagens,mensagens_texto_check: CHECK (((char_length(texto) >= 1) AND (char_length(texto) <= 1000)))
+2,restricao,palpites,palpites_chute_id_fkey: FOREIGN KEY (chute_id) REFERENCES participantes(id)
+2,restricao,palpites,palpites_pkey: PRIMARY KEY (id)
+2,restricao,palpites,palpites_rodada_id_fkey: FOREIGN KEY (rodada_id) REFERENCES rodadas(id) ON DELETE CASCADE
+2,restricao,palpites,"palpites_rodada_id_votante_id_key: UNIQUE (rodada_id, votante_id)"
+2,restricao,palpites,palpites_votante_id_fkey: FOREIGN KEY (votante_id) REFERENCES participantes(id)
+2,restricao,participantes,participantes_auth_user_id_fkey: FOREIGN KEY (auth_user_id) REFERENCES auth.users(id) ON DELETE SET NULL
+2,restricao,participantes,participantes_auth_user_id_key: UNIQUE (auth_user_id)
+2,restricao,participantes,participantes_email_check: CHECK ((email = lower(email)))
+2,restricao,participantes,participantes_email_key: UNIQUE (email)
+2,restricao,participantes,participantes_pkey: PRIMARY KEY (id)
+2,restricao,rodadas,rodadas_ordem_key: UNIQUE (ordem)
+2,restricao,rodadas,rodadas_pkey: PRIMARY KEY (id)
+2,restricao,rodadas,rodadas_sorteio_id_fkey: FOREIGN KEY (sorteio_id) REFERENCES sorteio(id)
+2,restricao,rodadas,rodadas_sorteio_id_key: UNIQUE (sorteio_id)
+2,restricao,sorteio,sorteio_check: CHECK ((quem_da_id <> quem_recebe_id))
+2,restricao,sorteio,sorteio_pkey: PRIMARY KEY (id)
+2,restricao,sorteio,sorteio_posicao_circulo_check: CHECK ((posicao_circulo >= 0))
+2,restricao,sorteio,sorteio_posicao_circulo_key: UNIQUE (posicao_circulo)
+2,restricao,sorteio,sorteio_quem_da_id_fkey: FOREIGN KEY (quem_da_id) REFERENCES participantes(id)
+2,restricao,sorteio,sorteio_quem_da_id_key: UNIQUE (quem_da_id)
+2,restricao,sorteio,sorteio_quem_recebe_id_fkey: FOREIGN KEY (quem_recebe_id) REFERENCES participantes(id)
+2,restricao,sorteio,sorteio_quem_recebe_id_key: UNIQUE (quem_recebe_id)
+3,enum,autor_mensagem,"da, recebe"
+3,enum,status_rodada,"votando, encerrada, revelada"
+4,policy,ajudantes,convidar ajudante | INSERT | authenticated | using: - | check: (participante_id = meu_participante_id())
+4,policy,ajudantes,remover ajudante | DELETE | authenticated | using: (participante_id = meu_participante_id()) | check: -
+4,policy,ajudantes,ver meus ajudantes | SELECT | authenticated | using: ((participante_id = meu_participante_id()) OR (auth_user_id = auth.uid())) | check: -
+4,policy,itens_desejo,adicionar na minha lista | INSERT | authenticated | using: - | check: (participante_id = meu_participante_id())
