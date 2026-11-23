@@ -6,7 +6,7 @@ import { ContagemVotacao } from "@/components/jogo/contagem-votacao";
 import { fraseUltimaRodada } from "@/components/jogo/frases";
 import { Ranking } from "@/components/jogo/ranking";
 import { Roleta } from "@/components/jogo/roleta";
-import { useEstadoJogo } from "@/components/jogo/use-estado-jogo";
+import { situacaoJogo, useEstadoJogo } from "@/components/jogo/use-estado-jogo";
 import { useRoleta } from "@/components/jogo/use-roleta";
 import { Clock, Gift } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
@@ -25,8 +25,7 @@ export function Telao({ total }: { total: number }) {
 
   let conteudo: React.ReactNode;
   let chave: string;
-  const ultimaRodada = Boolean(atual && atual.ordem >= total - 1);
-  const fim = Boolean(atual && atual.status === "revelada" && ultimaRodada);
+  const { ultimaRodada, fim, circuloCompleto, rodadaNoCirculo } = situacaoJogo(rodadas, atual);
 
   if (!atual) {
     chave = "espera";
@@ -54,8 +53,8 @@ export function Telao({ total }: { total: number }) {
       <div className="text-center">
         <div className="game-heading">
           <span className="eyebrow telao-eyebrow">
-            Rodada {atual.ordem + 1} de {total}
-            {ultimaRodada && " · a última!"}
+            Círculo {atual.circulo} · rodada {rodadaNoCirculo} de {atual.tamanho_circulo}
+            {ultimaRodada && " · a última do jogo!"}
           </span>
           <h1>
             {atual.status === "revelada" ? `${atual.revelador_nome} tirou…` : `Quem ${atual.revelador_nome} tirou?`}
@@ -68,14 +67,19 @@ export function Telao({ total }: { total: number }) {
         </div>
 
         {atual.status === "revelada" ? (
-          <EtiquetaPresente
-            key={atual.rodada_id}
-            nome={atual.amigo_nome ?? ""}
-            legenda={`${atual.revelador_nome} tirou`}
-            revelada
-            onRevelar={() => {}}
-            confete="grande"
-          />
+          <>
+            <EtiquetaPresente
+              key={atual.rodada_id}
+              nome={atual.amigo_nome ?? ""}
+              legenda={`${atual.revelador_nome} tirou`}
+              revelada
+              onRevelar={() => {}}
+              confete="grande"
+            />
+            {circuloCompleto && !fim && (
+              <p className="telao-destaque mt-4">Fim do círculo {atual.circulo}! 🎉</p>
+            )}
+          </>
         ) : atual.status === "encerrada" ? (
           <div className="py-10">
             <motion.div

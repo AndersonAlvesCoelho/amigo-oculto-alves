@@ -2,25 +2,31 @@
 
 import { getSessao } from "@/lib/sessao";
 import { createClient } from "@/lib/supabase/server";
+import { z } from "zod";
 
 export type Resultado = { ok: boolean; mensagem: string };
 
-const FUNCOES = {
-  proxima: "jogo_proxima_rodada",
-  revelar: "jogo_revelar",
-} as const;
-
-/** Executa um comando do jogo. As funções do banco conferem se é admin. */
-export async function comandoJogo(acao: keyof typeof FUNCOES): Promise<Resultado> {
+/**
+ * Executa um comando do jogo. As funções do banco conferem se é admin.
+ * Para começar um círculo, informe quem começa (`iniciar`).
+ */
+export async function comandoJogo(acao: "proxima" | "revelar", iniciar?: string): Promise<Resultado> {
   if (!(await getSessao())?.participante?.is_admin) {
     return { ok: false, mensagem: "Apenas admins." };
   }
   const supabase = await createClient();
-  const { error } = await supabase.rpc(FUNCOES[acao]);
+  const { error } =
+    acao === "revelar"
+      ? await supabase.rpc("jogo_revelar")
+      : await supabase.rpc("jogo_proxima_rodada", {
+          p_iniciar: iniciar && z.uuid().safeParse(iniciar).success ? iniciar : null,
+        });
   if (error) {
-    console.error(`Falha em ${FUNCOES[acao]}:`, error.code, error.message);
+    console.error(`Falha no comando ${acao}:`, error.code, error.message);
     return { ok: false, mensagem: error.message };
   }
-  const ok = { proxima: "Rodada aberta! O relógio de 3 minutos começou.", revelar: "Revelado!" };
-  return { ok: true, mensagem: ok[acao] };
+  return {
+    ok: true,
+    mensagem: acao === "revelar" ? "Revelado!" : "Rodada aberta! O relógio de 3 minutos começou.",
+  };
 }

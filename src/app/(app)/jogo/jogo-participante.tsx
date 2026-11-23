@@ -7,7 +7,7 @@ import { ContagemVotacao } from "@/components/jogo/contagem-votacao";
 import { fraseUltimaRodada } from "@/components/jogo/frases";
 import { Ranking } from "@/components/jogo/ranking";
 import { Roleta } from "@/components/jogo/roleta";
-import { useEstadoJogo } from "@/components/jogo/use-estado-jogo";
+import { situacaoJogo, useEstadoJogo } from "@/components/jogo/use-estado-jogo";
 import { useRoleta } from "@/components/jogo/use-roleta";
 import { Button } from "@/components/ui/button";
 import { Check, CheckCircle, Clock, Monitor, Orbit, Sparkles, Trophy, Users } from "lucide-react";
@@ -82,8 +82,7 @@ export function JogoParticipante({ euId, participantes }: { euId: string; partic
     );
   }
 
-  const ultimaRodada = atual.ordem >= total - 1;
-  const fim = atual.status === "revelada" && ultimaRodada;
+  const { ultimaRodada, fim, circuloCompleto, rodadaNoCirculo } = situacaoJogo(rodadas, atual);
 
   // Depois da última revelação: círculo e ranking, um de cada vez
   if (fim && (etapaFinal === "circulo" || etapaFinal === "ranking")) {
@@ -145,8 +144,8 @@ export function JogoParticipante({ euId, participantes }: { euId: string; partic
     <>
       <div className="game-heading">
         <span className="eyebrow">
-          Jogo ao vivo · rodada {atual.ordem + 1} de {total}
-          {ultimaRodada && " · a última!"}
+          Círculo {atual.circulo} · rodada {rodadaNoCirculo} de {atual.tamanho_circulo}
+          {ultimaRodada && " · a última do jogo!"}
         </span>
         <h1>
           {atual.status === "revelada"
@@ -201,6 +200,10 @@ export function JogoParticipante({ euId, participantes }: { euId: string; partic
                     </Button>
                   </div>
                 </>
+              ) : circuloCompleto ? (
+                <p className="mt-6 text-lg font-semibold text-primary">
+                  Fim do círculo {atual.circulo}! 🎉 Aguardando o próximo círculo…
+                </p>
               ) : (
                 <p className="mt-6 text-muted-foreground">Aguardando a próxima rodada…</p>
               )}

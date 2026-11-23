@@ -17,6 +17,36 @@ const iniciais = (nome: string) => {
  * como iniciais. Tocar num ponto mostra o par daquela pessoa.
  */
 export function CirculoFinal({ rodadas }: { rodadas: Rodada[] }) {
+  const circulos = [...new Set(rodadas.map((r) => r.circulo))].sort();
+  const varios = circulos.length > 1;
+  return (
+    <section className="final-circle" aria-label="Quem tirou quem">
+      <div className="game-heading">
+        <span className="eyebrow">{varios ? "Os círculos completos" : "O círculo completo"}</span>
+        <h2 className="text-3xl">Quem tirou quem</h2>
+      </div>
+      <ol className="sr-only">
+        {rodadas.map((r) => (
+          <li key={r.rodada_id}>
+            {r.revelador_nome} tirou {r.amigo_nome}
+          </li>
+        ))}
+      </ol>
+      <div className={`orbitas ${varios ? "duas" : ""}`}>
+        {circulos.map((c) => (
+          <Anel
+            key={c}
+            titulo={varios ? `Círculo ${c}` : undefined}
+            rodadas={rodadas.filter((r) => r.circulo === c)}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/** Um anel: as pessoas de um círculo, na ordem em que foram reveladas. */
+function Anel({ rodadas, titulo }: { rodadas: Rodada[]; titulo?: string }) {
   const reduzir = useReducedMotion();
   const n = rodadas.length;
   const [ativo, setAtivo] = useState(0);
@@ -56,20 +86,8 @@ export function CirculoFinal({ rodadas }: { rodadas: Rodada[] }) {
   const recebe = (ativo + 1) % n;
 
   return (
-    <section className="final-circle" aria-label="Quem tirou quem">
-      <div className="game-heading">
-        <span className="eyebrow">O círculo completo</span>
-        <h2 className="text-3xl">Quem tirou quem</h2>
-      </div>
-
-      <ol className="sr-only">
-        {rodadas.map((r) => (
-          <li key={r.rodada_id}>
-            {r.revelador_nome} tirou {r.amigo_nome}
-          </li>
-        ))}
-      </ol>
-
+    <div className="orbita-bloco">
+      {titulo && <h3 className="orbita-titulo">{titulo}</h3>}
       <div className={`orbita ${muitos ? "muitos" : ""}`} aria-hidden>
         {/* brilho de fundo */}
         <div className="orbita-halo" />
@@ -77,7 +95,7 @@ export function CirculoFinal({ rodadas }: { rodadas: Rodada[] }) {
         <motion.div className="absolute inset-0" animate={giro} transition={tempo}>
           <svg viewBox="0 0 100 100" className="absolute inset-0 size-full overflow-visible">
             <defs>
-              <marker id="orbita-ponta" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto">
+              <marker id={`orbita-ponta-${rodadas[0].circulo}`} viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto">
                 <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--ribbon)" />
               </marker>
             </defs>
@@ -90,7 +108,7 @@ export function CirculoFinal({ rodadas }: { rodadas: Rodada[] }) {
                 fill="none"
                 stroke="var(--ribbon)"
                 strokeLinecap="round"
-                markerEnd="url(#orbita-ponta)"
+                markerEnd={`url(#orbita-ponta-${rodadas[0].circulo})`}
                 initial={reduzir ? false : { pathLength: 0, opacity: 0 }}
                 animate={{
                   pathLength: 1,
@@ -160,6 +178,6 @@ export function CirculoFinal({ rodadas }: { rodadas: Rodada[] }) {
           </button>
         </p>
       )}
-    </section>
+    </div>
   );
 }

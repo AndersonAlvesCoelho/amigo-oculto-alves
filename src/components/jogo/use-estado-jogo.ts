@@ -16,11 +16,36 @@ export type Rodada = {
   total_votos: number;
   /** Quando a votação fecha sozinha (3 min após abrir). */
   fim_votacao: string;
+  /** Círculo do sorteio (1 ou 2), tamanho dele e total de rodadas do jogo. */
+  circulo: number;
+  tamanho_circulo: number;
+  total_rodadas: number;
 };
+
+/** Onde o jogo está, a partir das rodadas já abertas. */
+export function situacaoJogo(rodadas: Rodada[] | null, atual: Rodada | null) {
+  if (!rodadas || !atual) {
+    return { rodadaNoCirculo: 0, circuloCompleto: false, fim: false, ultimaRodada: false };
+  }
+  const doCirculo = rodadas.filter((r) => r.circulo === atual.circulo);
+  const circuloCompleto = atual.status === "revelada" && doCirculo.length >= atual.tamanho_circulo;
+  return {
+    rodadaNoCirculo: doCirculo.findIndex((r) => r.rodada_id === atual.rodada_id) + 1,
+    circuloCompleto,
+    // a última rodada do jogo inteiro (é a única "óbvia": só sobra um nome)
+    ultimaRodada: rodadas.length >= atual.total_rodadas,
+    fim: circuloCompleto && rodadas.length >= atual.total_rodadas,
+  };
+}
 
 export type LinhaRanking = { participante_id: string; nome: string; acertos: number };
 
-type Linha = Omit<Rodada, "total_votos"> & { total_votos: number | string; agora: string };
+type Linha = Omit<Rodada, "total_votos" | "tamanho_circulo" | "total_rodadas"> & {
+  total_votos: number | string;
+  tamanho_circulo: number | string;
+  total_rodadas: number | string;
+  agora: string;
+};
 
 /**
  * Estado do jogo ao vivo (função estado_jogo do banco).
@@ -55,6 +80,9 @@ export function useEstadoJogo() {
         amigo_nome: r.amigo_nome,
         total_votos: Number(r.total_votos),
         fim_votacao: r.fim_votacao,
+        circulo: Number(r.circulo),
+        tamanho_circulo: Number(r.tamanho_circulo),
+        total_rodadas: Number(r.total_rodadas),
       })),
     );
   }, [supabase]);

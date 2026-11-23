@@ -362,8 +362,14 @@
 .roleta-legenda { font-family: var(--font-display); font-size: clamp(22px, 3vw, 40px); color: var(--primary); font-weight: 600; }
 
 /* ---- Círculo final: órbita de quem tirou quem ---- */
+.orbitas { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 24px 40px; }
+.orbita-bloco { display: flex; flex-direction: column; align-items: center; }
+.orbita-titulo { font-size: 20px; margin-bottom: 4px; color: var(--muted-foreground); font-weight: 600; }
 .orbita { position: relative; width: min(680px, 94vw); aspect-ratio: 1; margin: 0 auto; container-type: inline-size; }
+.orbitas.duas .orbita { width: min(520px, 94vw); }
 .screen-mode .orbita { width: min(80vh, 94vw); }
+.screen-mode .orbitas.duas .orbita { width: min(70vh, 46vw); }
+.screen-mode .orbita-titulo { font-size: clamp(18px, 2vw, 30px); }
 .orbita-halo { position: absolute; inset: 18%; border-radius: 50%; background: radial-gradient(circle, color-mix(in oklab, var(--ribbon) 10%, transparent), transparent 70%); }
 .orbita-no { position: absolute; transform: translate(-50%, -50%); background: none; border: 0; padding: 0; cursor: pointer; }
 .orbita-no-conteudo { display: flex; flex-direction: column; align-items: center; gap: 0.8cqi; }

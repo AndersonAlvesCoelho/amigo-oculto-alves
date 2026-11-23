@@ -3,7 +3,7 @@
 -- Apaga TODOS os dados de teste, cria os 26 participantes reais,
 -- as exclusões, roda o sorteio e sorteia o amigo de fachada.
 -- Roda tudo numa transação: se algo falhar, nada é gravado.
--- Pré-requisito: migrations 001 a 007 rodadas.
+-- Pré-requisito: migrations 001 a 009 rodadas.
 -- =====================================================================
 begin;
 
@@ -67,7 +67,7 @@ select a.id, b.id, x.motivo
   join participantes a on a.nome = x.nome_a
   join participantes b on b.nome = x.nome_b;
 
--- 6. Sorteio: Anderson abre o círculo e tira a Ana Beatriz
+-- 6. Sorteio em dois círculos (13 + 13): Anderson abre o círculo 1 e tira a Ana Beatriz
 select realizar_sorteio('a0a0coelho0@gmail.com', 'anabeatrizsf7@gmail.com');
 
 -- 7. Amigo de fachada do Anderson: qualquer um, menos ele, a Ana Beatriz e a Renata
@@ -78,11 +78,12 @@ update participantes
       order by random() limit 1)
  where email = 'a0a0coelho0@gmail.com';
 
--- 8. Conferências (devem dar 26, 9 e 26)
+-- 8. Conferências (devem dar 26, 9, 13 e 13)
 select
-  (select count(*) from participantes) as participantes,
-  (select count(*) from exclusoes)     as exclusoes,
-  (select count(*) from sorteio)       as linhas_do_sorteio;
+  (select count(*) from participantes)                as participantes,
+  (select count(*) from exclusoes)                    as exclusoes,
+  (select count(*) from sorteio where circulo = 1)    as circulo_1,
+  (select count(*) from sorteio where circulo = 2)    as circulo_2;
 
 commit;
 

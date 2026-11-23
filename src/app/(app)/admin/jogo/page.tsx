@@ -10,13 +10,8 @@ export default async function AdminJogoPage() {
   const admin = createAdminClient();
   const [sorteio, participantes] = await Promise.all([
     admin.from("sorteio").select("id", { count: "exact", head: true }),
-    admin.from("participantes").select("nome"),
+    admin.from("participantes").select("id, nome").order("nome"),
   ]);
 
-  return (
-    <ComandoJogo
-      totalRodadas={sorteio.count ?? 0}
-      nomes={(participantes.data ?? []).map((p) => p.nome)}
-    />
-  );
+  return <ComandoJogo totalRodadas={sorteio.count ?? 0} participantes={participantes.data ?? []} />;
 }
