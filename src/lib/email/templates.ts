@@ -30,6 +30,10 @@ type Moldura = {
   paragrafos: string[];
   /** Destaque opcional (ex.: "7" + "dias para a festa"). */
   destaque?: { numero: string; legenda: string };
+  /** Nome em destaque, numa etiqueta ("Você tirou"). */
+  revelacao?: string;
+  /** Texto curto que o app de e-mail mostra na notificação/lista (fica invisível no corpo). */
+  preheader?: string;
   botao: string;
   link: string;
   observacao: string;
@@ -56,6 +60,20 @@ function moldura(m: Moldura) {
       </table>`
     : "";
 
+  const revelacao = m.revelacao
+    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:6px 0 20px;">
+        <tr><td align="center" style="padding:22px 16px;border:2px dashed ${LINHA};border-radius:14px;background:${PAPEL};">
+          <div style="font-size:12px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase;color:${SUAVE};">Você tirou</div>
+          <div style="margin-top:8px;font-size:34px;line-height:1.15;font-weight:800;color:${ANIL};">${escapar(m.revelacao)}</div>
+        </td></tr>
+      </table>`
+    : "";
+
+  // espaços invisíveis depois do preheader impedem o app de puxar o texto do corpo
+  const preheader = m.preheader
+    ? `<div style="display:none;max-height:0;max-width:0;overflow:hidden;opacity:0;mso-hide:all;font-size:1px;line-height:1px;color:${PAPEL};">${escapar(m.preheader)}${"&#8199;&#847; ".repeat(90)}</div>`
+    : "";
+
   return `<!doctype html>
 <html lang="pt-BR">
 <head>
@@ -72,6 +90,7 @@ function moldura(m: Moldura) {
 </style>
 </head>
 <body style="margin:0;padding:0;background:${PAPEL};font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  ${preheader}
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${PAPEL};padding:32px 12px;">
     <tr><td align="center">
 
@@ -97,6 +116,7 @@ function moldura(m: Moldura) {
           <h1 style="margin:0 0 18px;font-size:25px;line-height:1.3;font-weight:700;color:${ANIL};">${m.titulo}</h1>
 
           ${paragrafos}
+          ${revelacao}
           ${destaque}
 
           <table role="presentation" cellpadding="0" cellspacing="0" style="margin:22px 0 26px;">
@@ -123,30 +143,58 @@ const textoPuro = (linhas: (string | false | undefined)[]) =>
 
 const OBS_LINK = `O link vale por 24 horas e funciona uma vez só. Se vencer, é só entrar em <a href="${SITE}/entrar" style="color:${ANIL};">${SITE_CURTO}</a> com este e-mail e pedir outro.`;
 
-/** Primeiro e-mail: avisa do sorteio e ativa a conta. Nunca traz o nome sorteado. */
-export function emailConvite({ nome, link }: { nome?: string; link: string }): Email {
+/**
+ * Primeiro e-mail: avisa do sorteio, já mostra quem a pessoa tirou e ativa a conta.
+ * O nome fica só no corpo: assunto e pré-visualização são neutros, para não
+ * aparecer na notificação do celular.
+ */
+export function emailConvite({ nome, link, amigo }: { nome?: string; link: string; amigo?: string }): Email {
   const oi = saudacao(nome);
+  if (!amigo) {
+    // sem sorteio ainda (não deveria acontecer): versão sem o nome
+    return {
+      assunto: "Seu amigo oculto já foi sorteado 🎁",
+      html: moldura({
+        selo: "Amigo Oculto 2026",
+        titulo: "Seu amigo oculto já foi sorteado 🎁",
+        paragrafos: [
+          `${escapar(oi)} O sorteio da família Alves aconteceu e tem alguém esperando o <strong>seu</strong> presente. 🎉`,
+          "Toque no botão para descobrir quem você tirou e montar a sua lista de desejos.",
+        ],
+        destaque: { numero: "R$ 50–60", legenda: "valor sugerido" },
+        botao: "Descobrir quem eu tirei",
+        link,
+        observacao: OBS_LINK,
+        preheader: "Abra para descobrir quem você tirou 🤫",
+      }),
+      texto: textoPuro([`${oi} O sorteio aconteceu. Descubra quem você tirou:`, link]),
+    };
+  }
   return {
     assunto: "Seu amigo oculto já foi sorteado 🎁",
     html: moldura({
       selo: "Amigo Oculto 2026",
-      titulo: "Seu amigo oculto já foi sorteado 🎁",
+      titulo: "O sorteio aconteceu! 🎉",
       paragrafos: [
-        `${escapar(oi)} O sorteio da família Alves aconteceu e tem alguém esperando o <strong>seu</strong> presente. 🎉`,
-        "Toque no botão para descobrir quem você tirou e montar a sua lista de desejos.",
+        `${escapar(oi)} O amigo oculto da família Alves já tem dupla formada. Guarde segredo: 🤫`,
       ],
+      revelacao: amigo,
       destaque: { numero: "R$ 50–60", legenda: "valor sugerido" },
-      botao: "Descobrir quem eu tirei",
+      botao: "Ver a lista de desejos",
       link,
-      observacao: OBS_LINK,
+      observacao: `Toque no botão para ativar sua conta, ver a lista de desejos de ${escapar(primeiroNome(amigo) ?? amigo)} e montar a sua. ${OBS_LINK}`,
+      preheader: "Abra para ver quem você tirou 🤫",
     }),
     texto: textoPuro([
-      `${oi} O sorteio da família Alves aconteceu e tem alguém esperando o seu presente. 🎉`,
+      `${oi} O sorteio do amigo oculto da família Alves aconteceu! 🎉`,
       "",
-      "Descubra quem você tirou:",
-      link,
+      `Você tirou: ${amigo}`,
+      "Guarde segredo! 🤫",
       "",
       "Valor sugerido: R$ 50 a R$ 60.",
+      "Ative sua conta e veja a lista de desejos:",
+      link,
+      "",
       "O link vale por 24 horas e funciona uma vez só.",
       `Se vencer, entre em ${SITE}/entrar com este e-mail e peça outro.`,
     ]),

@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
   const link = "#";
   const nome = "Leonor";
   const modelos = {
-    convite: emailConvite({ nome, link }),
+    convite: emailConvite({ nome, link, amigo: "Ana Beatriz" }),
     acesso: emailAcesso({ nome, link }),
     ajudante: emailAjudante({ quemConvidou: "Anderson", link }),
     lista: emailListaAlterada({ nome }),

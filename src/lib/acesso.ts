@@ -1,5 +1,6 @@
 import { enviarEmail } from "@/lib/email/enviar";
 import { emailAcesso, emailAjudante, emailConvite } from "@/lib/email/templates";
+import { meuAmigoExibido } from "@/lib/amigo";
 import { createAdminClient } from "@/lib/supabase/admin";
 import "server-only";
 
@@ -133,9 +134,12 @@ export async function enviarConvite(pessoa: Pessoa) {
       tipo: "ajudante",
     });
   }
+  // quem a pessoa tirou (ou o amigo de fachada, se houver) vai no corpo do e-mail
+  const { amigo: amigoExibido } = await meuAmigoExibido(pessoa.participanteId);
+  const amigo = amigoExibido?.nome;
   return enviarEmail({
     para: pessoa.email,
-    ...emailConvite({ nome: pessoa.nome, link }),
+    ...emailConvite({ nome: pessoa.nome, link, amigo }),
     tipo: "convite",
     participanteId: pessoa.participanteId,
   });
