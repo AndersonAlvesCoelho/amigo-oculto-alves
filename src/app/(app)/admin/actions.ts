@@ -48,16 +48,18 @@ export async function enviarConvitesPendentes(): Promise<ResultadoConvite> {
     return { ok: false, mensagem: "Rode o sorteio antes de enviar os convites." };
   }
 
+  // Pendentes = quem ainda não recebeu o e-mail do sorteio (admins incluídos)
   const admin = createAdminClient();
-  const { data, error } = await admin
-    .from("participantes")
-    .select("id, nome, email, is_admin, auth_user_id")
-    .is("auth_user_id", null)
-    .order("nome");
-  if (error) {
-    console.error("Falha ao listar participantes:", error.message);
+  const [lista, logConvites] = await Promise.all([
+    admin.from("participantes").select("id, nome, email, is_admin, auth_user_id").order("nome"),
+    admin.from("log_emails").select("email_destino").eq("tipo", "convite").eq("status", "enviado"),
+  ]);
+  if (lista.error || logConvites.error) {
+    console.error("Falha ao listar participantes:", lista.error?.message ?? logConvites.error?.message);
     return { ok: false, mensagem: "Não foi possível listar os participantes." };
   }
+  const jaRecebeu = new Set(logConvites.data.map((e) => e.email_destino));
+  const data = lista.data.filter((p) => !jaRecebeu.has(p.email));
   if (data.length === 0) {
     return { ok: true, mensagem: "Todos já foram convidados." };
   }

@@ -14,6 +14,8 @@ export type LinhaParticipante = {
   nome: string;
   email: string;
   isAdmin: boolean;
+  /** Já recebeu o e-mail do sorteio. */
+  conviteEnviado: boolean;
   situacao: "nao_convidado" | "convidado" | "ativo";
 };
 
@@ -43,7 +45,7 @@ export function PainelConvites({
     enviarConvitesPendentes,
     null,
   );
-  const pendentes = linhas.filter((l) => l.situacao === "nao_convidado").length;
+  const pendentes = linhas.filter((l) => !l.conviteEnviado).length;
   const ativos = linhas.filter((l) => l.situacao === "ativo").length;
 
   return (
@@ -110,6 +112,9 @@ function LinhaConvite({
         <span className={`flex items-center gap-2 text-sm ${s.classe}`}>
           <Icone size={17} aria-hidden /> {s.texto}
         </span>
+        <span className="text-xs text-muted-foreground">
+          {linha.conviteEnviado ? "E-mail do sorteio enviado" : "E-mail do sorteio ainda não enviado"}
+        </span>
         <Resultado r={resultado} />
       </div>
       <form action={acao}>
@@ -119,9 +124,9 @@ function LinhaConvite({
           variant="outline"
           size="sm"
           disabled={!sorteioFeito || enviando}
-          aria-label={`${linha.situacao === "nao_convidado" ? "Convidar" : "Reenviar convite para"} ${linha.nome}`}
+          aria-label={`${linha.conviteEnviado ? "Reenviar convite para" : "Convidar"} ${linha.nome}`}
         >
-          {enviando ? "Enviando…" : linha.situacao === "nao_convidado" ? "Convidar" : "Reenviar"}
+          {enviando ? "Enviando…" : linha.conviteEnviado ? "Reenviar" : "Convidar"}
         </Button>
       </form>
     </div>

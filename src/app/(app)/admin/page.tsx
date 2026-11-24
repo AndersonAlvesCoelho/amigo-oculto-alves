@@ -11,14 +11,16 @@ export default async function AdminPage() {
   if (!sessao?.participante?.is_admin) redirect("/");
 
   const admin = createAdminClient();
-  const [participantes, sorteio, usuarios] = await Promise.all([
+  const [participantes, sorteio, usuarios, convites] = await Promise.all([
     admin
       .from("participantes")
       .select("id, nome, email, is_admin, auth_user_id")
       .order("nome"),
     admin.from("sorteio").select("id", { count: "exact", head: true }),
     admin.auth.admin.listUsers({ perPage: 1000 }),
+    admin.from("log_emails").select("email_destino").eq("tipo", "convite").eq("status", "enviado"),
   ]);
+  const recebeuConvite = new Set((convites.data ?? []).map((c) => c.email_destino));
 
   if (participantes.error || sorteio.error || usuarios.error) {
     console.error(
@@ -46,6 +48,7 @@ export default async function AdminPage() {
       nome: p.nome,
       email: p.email,
       isAdmin: p.is_admin,
+      conviteEnviado: recebeuConvite.has(p.email),
       situacao: !temConta
         ? "nao_convidado"
         : confirmados.get(p.auth_user_id!)
