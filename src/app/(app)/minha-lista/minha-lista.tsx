@@ -27,7 +27,23 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { excluirPresente, previaDoLink, salvarPresente } from "./actions";
 
-export function MinhaLista({ itens, erro }: { itens: ItemPresente[]; erro: boolean }) {
+export function MinhaLista({
+  itens,
+  erro,
+  participanteId,
+  titulo: tituloPagina = "Minha lista de desejos",
+  subtitulo = "Algumas pistas para quem vai te surpreender.",
+  nomeDono,
+}: {
+  itens: ItemPresente[];
+  erro: boolean;
+  /** Só para o ajudante: de quem é a lista. */
+  participanteId?: string;
+  titulo?: string;
+  subtitulo?: string;
+  /** Só para o ajudante: primeiro nome de quem é a lista (nos textos). */
+  nomeDono?: string;
+}) {
   const celular = useCelular();
   const [aberto, setAberto] = useState(false);
   const [editando, setEditando] = useState<ItemPresente | null>(null);
@@ -43,21 +59,27 @@ export function MinhaLista({ itens, erro }: { itens: ItemPresente[]; erro: boole
     <FormPresente
       key={editando?.id ?? "novo"}
       item={editando}
+      participanteId={participanteId}
       onSalvo={() => {
         setAberto(false);
-        toast.success(editando ? "Presente atualizado!" : "Presente salvo na sua lista!");
+        toast.success(
+          editando
+            ? "Presente atualizado!"
+            : nomeDono
+              ? `Presente salvo na lista de ${nomeDono}!`
+              : "Presente salvo na sua lista!",
+        );
       }}
     />
   );
   const titulo = editando ? "Editar presente" : "Adicionar presente";
-  const descricao = "Uma pista para quem vai te presentear.";
+  const descricao = nomeDono
+    ? `Uma pista para quem vai presentear ${nomeDono}.`
+    : "Uma pista para quem vai te presentear.";
 
   return (
     <>
-      <CabecalhoPagina
-        titulo="Minha lista de desejos"
-        subtitulo="Algumas pistas para quem vai te surpreender."
-      >
+      <CabecalhoPagina titulo={tituloPagina} subtitulo={subtitulo}>
         <Button onClick={() => abrir(null)}>
           <Plus aria-hidden />
           <span className="hidden sm:inline">Adicionar presente</span>
@@ -75,8 +97,12 @@ export function MinhaLista({ itens, erro }: { itens: ItemPresente[]; erro: boole
         </div>
       ) : (
         <Vazio
-          titulo="Seu primeiro desejo está esperando"
-          texto="Um livro, uma caneca, algo que é a sua cara. Que tal dar uma pista?"
+          titulo={nomeDono ? `A lista de ${nomeDono} está vazia` : "Seu primeiro desejo está esperando"}
+          texto={
+            nomeDono
+              ? `Pergunte o que ${nomeDono} gostaria de ganhar e adicione aqui.`
+              : "Um livro, uma caneca, algo que é a sua cara. Que tal dar uma pista?"
+          }
         >
           <Button onClick={() => abrir(null)}>
             <Plus aria-hidden /> Adicionar presente
@@ -110,7 +136,9 @@ export function MinhaLista({ itens, erro }: { itens: ItemPresente[]; erro: boole
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Excluir presente?</DialogTitle>
-            <DialogDescription>“{remover?.nome}” será removido da sua lista.</DialogDescription>
+            <DialogDescription>
+              “{remover?.nome}” será removido {nomeDono ? `da lista de ${nomeDono}` : "da sua lista"}.
+            </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-3">
             <Button variant="outline" onClick={() => setRemover(null)}>
@@ -138,7 +166,15 @@ export function MinhaLista({ itens, erro }: { itens: ItemPresente[]; erro: boole
   );
 }
 
-function FormPresente({ item, onSalvo }: { item: ItemPresente | null; onSalvo: () => void }) {
+function FormPresente({
+  item,
+  participanteId,
+  onSalvo,
+}: {
+  item: ItemPresente | null;
+  participanteId?: string;
+  onSalvo: () => void;
+}) {
   const [salvando, iniciarSalvar] = useTransition();
   const [buscando, iniciarBusca] = useTransition();
   const [erro, setErro] = useState<string | null>(null);
@@ -166,6 +202,7 @@ function FormPresente({ item, onSalvo }: { item: ItemPresente | null; onSalvo: (
       }}
     >
       <input type="hidden" name="id" value={item?.id ?? ""} />
+      <input type="hidden" name="participante_id" value={participanteId ?? ""} />
       <input type="hidden" name="imagem_url" value={link.trim() === linkBuscado ? (imagem ?? "") : ""} />
 
       <label className="form-field">

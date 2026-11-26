@@ -31,10 +31,37 @@ const schema = z.object({
   imagem_url: z.preprocess(vazioParaNull, z.url().max(2000).nullable()),
 });
 
-export async function salvarPresente(formData: FormData): Promise<Resultado> {
+/**
+ * De quem é a lista que está sendo editada: a do próprio participante, ou,
+ * para um ajudante, a do participante que ele ajuda (informado no formulário).
+ * O banco confere de novo pelas regras de segurança (RLS).
+ */
+async function donoDaLista(pedido: unknown): Promise<string | null> {
   const sessao = await getSessao();
-  const eu = sessao?.participante;
-  if (!eu) return { ok: false, mensagem: "Sua sessão expirou. Entre de novo." };
+  if (!sessao) return null;
+  if (sessao.participante) return sessao.participante.id;
+  if (!sessao.ajudando || typeof pedido !== "string" || !z.uuid().safeParse(pedido).success) {
+    return null;
+  }
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("ajudantes")
+    .select("participante_id")
+    .eq("auth_user_id", sessao.userId)
+    .eq("participante_id", pedido)
+    .maybeSingle();
+  return data?.participante_id ?? null;
+}
+
+function atualizarTelas() {
+  revalidatePath("/minha-lista");
+  revalidatePath("/ajudando");
+}
+
+export async function salvarPresente(formData: FormData): Promise<Resultado> {
+  const dono = await donoDaLista(formData.get("participante_id"));
+  if (!dono) return { ok: false, mensagem: "Sua sessão expirou. Entre de novo." };
+  formData.delete("participante_id");
 
   const parsed = schema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { ok: false, mensagem: parsed.error.issues[0].message };
@@ -49,33 +76,38 @@ export async function salvarPresente(formData: FormData): Promise<Resultado> {
   const dados = { ...campos, imagem_url };
   const { error } = id
     ? await supabase.from("itens_desejo").update(dados).eq("id", id)
-    : await supabase.from("itens_desejo").insert({ ...dados, participante_id: eu.id });
+    : await supabase.from("itens_desejo").insert({ ...dados, participante_id: dono });
 
   if (error) {
     console.error("Falha ao salvar presente:", error.code, error.message);
     return { ok: false, mensagem: "Não foi possível salvar. Tente de novo." };
   }
-  revalidatePath("/minha-lista");
-  after(() => avisarListaAlterada(eu.id)); // envia depois de responder à tela
+  atualizarTelas();
+  after(() => avisarListaAlterada(dono)); // envia depois de responder à tela
   return { ok: true };
 }
 
 export async function excluirPresente(id: string): Promise<Resultado> {
-  const eu = (await getSessao())?.participante;
-  if (!eu) return { ok: false, mensagem: "Sua sessão expirou. Entre de novo." };
+  if (!(await getSessao())) return { ok: false, mensagem: "Sua sessão expirou. Entre de novo." };
   const supabase = await createClient();
+  const { data: item } = await supabase
+    .from("itens_desejo")
+    .select("participante_id")
+    .eq("id", id)
+    .maybeSingle();
   const { error } = await supabase.from("itens_desejo").delete().eq("id", id);
   if (error) {
     console.error("Falha ao excluir presente:", error.code, error.message);
     return { ok: false, mensagem: "Não foi possível excluir. Tente de novo." };
   }
-  revalidatePath("/minha-lista");
-  after(() => avisarListaAlterada(eu.id));
+  atualizarTelas();
+  if (item) after(() => avisarListaAlterada(item.participante_id));
   return { ok: true };
 }
 
 /** Usado pelo formulário para mostrar a foto assim que o link é colado. */
 export async function previaDoLink(link: string): Promise<string | null> {
-  if (!(await getSessao())?.participante) return null;
+  const sessao = await getSessao();
+  if (!sessao?.participante && !sessao?.ajudando) return null;
   return buscarFotoDoLink(link);
 }

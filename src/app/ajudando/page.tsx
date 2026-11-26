@@ -5,6 +5,7 @@ import { getSessao } from "@/lib/sessao";
 import { createClient } from "@/lib/supabase/server";
 import { LogOut } from "lucide-react";
 import { redirect } from "next/navigation";
+import { MinhaLista } from "../(app)/minha-lista/minha-lista";
 import { EtiquetaAjudante } from "./etiqueta-ajudante";
 
 export default async function AjudandoPage() {
@@ -31,7 +32,7 @@ export default async function AjudandoPage() {
     supabase
       .from("itens_desejo")
       .select("id, participante_id, nome, preco, descricao, link, imagem_url")
-      .in("participante_id", amigosIds)
+      .in("participante_id", [...amigosIds, ...ids])
       .order("criado_em"),
   ]);
 
@@ -54,15 +55,19 @@ export default async function AjudandoPage() {
         {(pessoas.data ?? []).map((p) => {
           const sorteio = sorteios.data?.find((s) => s.quem_da_id === p.id);
           const amigo = nome(amigos.data, sorteio?.quem_recebe_id);
-          const lista = ((itens.data ?? []) as ItemPresente[]).filter(
-            (i) => i.participante_id === sorteio?.quem_recebe_id,
-          );
+          const todos = (itens.data ?? []) as ItemPresente[];
+          const lista = todos.filter((i) => i.participante_id === sorteio?.quem_recebe_id);
+          const listaDele = todos.filter((i) => i.participante_id === p.id);
+          const primeiro = p.nome.split(" ")[0];
           return (
             <section key={p.id} className="mb-14">
               <div className="page-heading">
                 <div>
                   <h1>Você está ajudando {p.nome}</h1>
-                  <p>Um carinho extra para escolher o presente certo. Só olhar, sem contar!</p>
+                  <p>
+                    Ajude a escolher o presente e a montar a lista de desejos de {primeiro}. Só não
+                    vale contar o segredo!
+                  </p>
                 </div>
               </div>
               {sorteio && amigo ? (
@@ -86,6 +91,17 @@ export default async function AjudandoPage() {
                   texto={`Quando ele for feito, você verá aqui quem ${p.nome} tirou.`}
                 />
               )}
+
+              <div className="mt-14">
+                <MinhaLista
+                  itens={listaDele}
+                  erro={Boolean(itens.error)}
+                  participanteId={p.id}
+                  nomeDono={primeiro}
+                  titulo={`Lista de desejos de ${primeiro}`}
+                  subtitulo={`O que ${primeiro} gostaria de ganhar. Você pode adicionar, editar e excluir.`}
+                />
+              </div>
             </section>
           );
         })}

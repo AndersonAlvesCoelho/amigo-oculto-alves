@@ -108,3 +108,51 @@ export async function enviarConviteParticipante(
     ? { ok: true, mensagem: "Enviado." }
     : { ok: false, mensagem: "Falhou. Veja o terminal." };
 }
+
+/** Admin cadastra um ajudante para um participante e envia o convite de ajudante. */
+export async function adicionarAjudanteAdmin(
+  _estado: ResultadoConvite,
+  formData: FormData,
+): Promise<ResultadoConvite> {
+  if (!(await souAdmin())) return { ok: false, mensagem: "Apenas admins." };
+
+  const participanteId = String(formData.get("participante_id") ?? "");
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { ok: false, mensagem: "Digite um e-mail válido." };
+  }
+
+  const admin = createAdminClient();
+  const [{ data: participante }, { data: ehParticipante }] = await Promise.all([
+    admin.from("participantes").select("id, nome").eq("id", participanteId).maybeSingle(),
+    admin.from("participantes").select("id").eq("email", email).maybeSingle(),
+  ]);
+  if (!participante) return { ok: false, mensagem: "Participante não encontrado." };
+  if (ehParticipante) {
+    return { ok: false, mensagem: "Esse e-mail é de um participante. Use o de alguém de fora." };
+  }
+
+  // o banco liga sozinho à conta, se esse e-mail já tiver uma
+  const { data: novo, error } = await admin
+    .from("ajudantes")
+    .insert({ participante_id: participante.id, email })
+    .select("auth_user_id")
+    .single();
+  if (error) {
+    if (error.code === "23505") return { ok: false, mensagem: "Esse ajudante já está cadastrado." };
+    console.error("Falha ao adicionar ajudante:", error.code, error.message);
+    return { ok: false, mensagem: "Não foi possível adicionar. Tente de novo." };
+  }
+
+  const ok = await enviarConvite({
+    participanteId: null,
+    email,
+    convidadoPor: participante.nome,
+    authUserId: novo.auth_user_id,
+    isAdmin: false,
+  });
+  revalidatePath("/admin");
+  return ok
+    ? { ok: true, mensagem: `Ajudante adicionado e convite enviado para ${email}.` }
+    : { ok: false, mensagem: "Ajudante adicionado, mas o e-mail falhou. Peça para entrar pelo /entrar." };
+}

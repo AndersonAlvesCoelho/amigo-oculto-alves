@@ -1,9 +1,10 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { CheckCircle, CircleDashed, Clock, Send } from "lucide-react";
+import { CheckCircle, CircleDashed, Clock, Send, UserRoundPlus } from "lucide-react";
 import { useActionState } from "react";
 import {
+  adicionarAjudanteAdmin,
   enviarConviteParticipante,
   enviarConvitesPendentes,
   type ResultadoConvite,
@@ -16,6 +17,8 @@ export type LinhaParticipante = {
   isAdmin: boolean;
   /** Já recebeu o e-mail do sorteio. */
   conviteEnviado: boolean;
+  /** E-mails dos ajudantes desse participante. */
+  ajudantes: string[];
   situacao: "nao_convidado" | "convidado" | "ativo";
 };
 
@@ -94,6 +97,7 @@ function LinhaConvite({
   sorteioFeito: boolean;
 }) {
   const [resultado, acao, enviando] = useActionState(enviarConviteParticipante, null);
+  const [resAjudante, acaoAjudante, adicionando] = useActionState(adicionarAjudanteAdmin, null);
   const s = SITUACAO[linha.situacao];
   const Icone = s.icone;
 
@@ -107,6 +111,30 @@ function LinhaConvite({
           )}
         </strong>
         <p className="email mt-1 text-sm text-muted-foreground">{linha.email}</p>
+        {linha.ajudantes.length > 0 && (
+          <p className="mt-1 text-xs text-muted-foreground">
+            Ajudante{linha.ajudantes.length > 1 ? "s" : ""}: {linha.ajudantes.join(", ")}
+          </p>
+        )}
+        <details className="mt-2">
+          <summary className="cursor-pointer text-sm text-primary">Adicionar ajudante</summary>
+          <form action={acaoAjudante} className="mt-2 flex flex-col gap-2 sm:flex-row">
+            <input type="hidden" name="participante_id" value={linha.id} />
+            <input
+              name="email"
+              type="email"
+              required
+              placeholder="e-mail do ajudante"
+              aria-label={`E-mail do ajudante de ${linha.nome}`}
+              className="search min-h-11 flex-1"
+            />
+            <Button type="submit" size="sm" disabled={adicionando}>
+              <UserRoundPlus aria-hidden />
+              {adicionando ? "Enviando…" : "Adicionar"}
+            </Button>
+          </form>
+          <Resultado r={resAjudante} />
+        </details>
       </div>
       <div className="flex flex-col gap-1">
         <span className={`flex items-center gap-2 text-sm ${s.classe}`}>
